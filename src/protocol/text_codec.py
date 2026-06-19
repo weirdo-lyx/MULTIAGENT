@@ -81,6 +81,28 @@ class TextCodec(Codec):
         """将 Message 渲染为完整自然语言文本（展开所有引用）。"""
         parts: list[str] = []
 
+        # 文本模式仍然是自然语言传输，但保留一行可解析的协议元数据，
+        # 让 Transport 完成 decode 后不会丢失 action/params 等路由字段。
+        metadata = {
+            "version": msg.version,
+            "src": msg.src,
+            "dst": msg.dst,
+            "msg_type": msg.msg_type,
+            "action": msg.action,
+            "params": msg.params,
+            "result": msg.result,
+            "capabilities": msg.capabilities,
+            "context_ref": msg.context_ref,
+            "memory_refs": msg.memory_refs,
+            "state_handle": msg.state_handle,
+            "corr_id": msg.corr_id,
+            "ts": msg.ts,
+        }
+        parts.append(
+            "【协议元数据】"
+            + json.dumps(metadata, ensure_ascii=False, separators=(",", ":"))
+        )
+
         # 1. 开头：发送方自我介绍 + 请求接收方
         role_map = {
             "planner": "策划Agent",
@@ -148,6 +170,29 @@ class TextCodec(Codec):
         验证消息可传输，不要求完全还原。
         """
         text = raw.decode("utf-8")
+        for line in text.split("\n"):
+            if line.startswith("【协议元数据】"):
+                payload = line.removeprefix("【协议元数据】")
+                try:
+                    data = json.loads(payload)
+                    return Message(
+                        version=data.get("version", 1),
+                        src=data.get("src", ""),
+                        dst=data.get("dst", ""),
+                        msg_type=data.get("msg_type", "request"),
+                        action=data.get("action", ""),
+                        params=data.get("params", {}),
+                        result=data.get("result", None),
+                        capabilities=data.get("capabilities", []),
+                        context_ref=data.get("context_ref", ""),
+                        memory_refs=data.get("memory_refs", []),
+                        state_handle=data.get("state_handle", None),
+                        corr_id=data.get("corr_id", ""),
+                        ts=data.get("ts", 0.0),
+                    )
+                except json.JSONDecodeError:
+                    break
+
         # 简化解析：提取能识别的字段
         msg = Message()
         for line in text.split("\n"):

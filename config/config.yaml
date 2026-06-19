@@ -1,0 +1,15 @@
+llm:
+  mode: mock          # api | mock
+  base_url: "https://api.deepseek.com/v1"
+  api_key: "sk-xxx"
+  model: "deepseek-chat"
+
+embedder:
+  model_name: "BAAI/bge-small-zh-v1.5"
+  offline: false
+
+memory:
+  persist_dir: "data/chroma"
+
+thresholds:
+  memory_hit_similarity: 0.75

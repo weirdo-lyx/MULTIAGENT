@@ -1,0 +1,20 @@
+# Python runtime/cache artifacts
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Local environments and secrets
+.venv/
+venv/
+.env
+
+# Generated experiment outputs
+results/*.json
+results/*.png
+data/
+
+# Local collaboration notes, do not publish
+AGENT_GUIDE.md
+PROGRESS.md
+ROADMAP.md
+小白说明书.md
